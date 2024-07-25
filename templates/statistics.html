@@ -1,0 +1,110 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Statistics Page</h2>
+<div id="message"></div>
+<canvas id="emotionChart" width="400" height="200"></canvas>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        fetch('/get_statistics')
+            .then(response => response.json())
+            .then(data => {
+                const emotionCounts = data.emotion_counts;
+                const maxEmotion = data.max_emotion;
+                
+                const labels = Object.keys(emotionCounts);
+                const values = Object.values(emotionCounts);
+                
+                const ctx = document.getElementById('emotionChart').getContext('2d');
+                new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Emotion Counts',
+                            data: values,
+                            borderColor: 'rgba(75, 192, 192, 1)',
+                            borderWidth: 1,
+                            fill: false
+                        }]
+                    },
+                    options: {
+                        scales: {
+                            yAxes: [{
+                                ticks: {
+                                    beginAtZero: true
+                                }
+                            }]
+                        }
+                    }
+                });
+
+                const messageDiv = document.getElementById('message');
+                let messages = [];
+                switch (maxEmotion) {
+                    case 'angry':
+                        messages = [
+                            '화가 나신 것 같아요. 심호흡을 하면서 진정해보세요.',
+                            '화를 내면 해결되지 않아요. 잠시 진정해보세요.',
+                            '화가 날 때는 깊게 숨을 들이마시고 천천히 내쉬세요.'
+                        ];
+                        break;
+                    case 'disgust':
+                        messages = [
+                            '싫어하는 감정이 드는 것 같아요. 잠시 휴식을 취해보는 건 어떨까요?',
+                            '불쾌한 감정이시군요. 기분 전환을 위해 잠시 쉬어보세요.',
+                            '싫은 감정은 잠시 뒤로 하고 휴식을 취해보세요.'
+                        ];
+                        break;
+                    case 'fear':
+                        messages = [
+                            '두려움을 느끼고 계신 것 같아요. 안전한 곳에 계신가요?',
+                            '두려울 때는 가까운 사람에게 도움을 요청하세요.',
+                            '두려운 감정이 느껴질 때는 심호흡을 해보세요.'
+                        ];
+                        break;
+                    case 'happy':
+                        messages = [
+                            '행복한 감정이네요! 계속 이 감정을 유지하세요!',
+                            '행복해 보이시네요! 이 기분을 만끽하세요!',
+                            '행복한 순간을 즐기세요!'
+                        ];
+                        break;
+                    case 'neutral':
+                        messages = [
+                            '중립적인 감정이네요. 차분한 하루를 보내고 계시군요.',
+                            '평온한 하루를 보내고 계신 것 같아요.',
+                            '오늘은 특별한 감정 없이 차분한 날이네요.'
+                        ];
+                        break;
+                    case 'sad':
+                        messages = [
+                            '슬픈 감정이 드는 것 같아요. 주변 사람들과 대화를 나누어 보세요.',
+                            '슬퍼 보이시네요. 가까운 사람과 이야기 나누면 도움이 될 거예요.',
+                            '슬픔이 느껴질 때는 혼자 있지 말고 주변에 도움을 청하세요.'
+                        ];
+                        break;
+                    case 'surprise':
+                        messages = [
+                            '놀라움을 느끼고 계신 것 같아요. 무슨 일이 있었나요?',
+                            '깜짝 놀랄 일이 있었나요? 진정하세요.',
+                            '놀라운 일이 생겼군요. 차분히 상황을 정리해보세요.'
+                        ];
+                        break;
+                    default:
+                        messages = ['감정을 분석하는 데 문제가 발생했어요.'];
+                        break;
+                    }
+
+const randomMessage = messages[Math.floor(Math.random() * messages.length)];
+let additionalMessage = '';
+if (maxEmotion === 'sad') {
+    additionalMessage = '당신의 슬픔, 혼자 해결하려고 하지 마세요. 도움을 줄 수 있는 기관에 도움을 받아 보시는 것은 어떠신가요? <a href="https://www.mykpcc.com/775474051" target="_blank">여기에서 도움 받기</a>';
+}
+messageDiv.innerHTML = maxEmotion + '한 감정이 많이 보이시네요. ' + randomMessage + '<br>' + additionalMessage;
+})
+.catch(error => console.error('Error fetching statistics:', error));
+});
+</script>
+{% endblock %}
